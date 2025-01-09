@@ -1,0 +1,32 @@
+services:
+  cli:
+    image: golang-cli
+    #cpus: 1
+    build:
+      dockerfile: docker/Dockerfile.cli
+      args:
+        APP_USER_ID: "${APP_USER_ID}"
+    user: "${APP_USER_ID}"
+    working_dir: /app
+    stdin_open: true
+    tty: true
+    networks:
+      - dev
+    ports:
+      - "${EXT_PORT}:${EXT_PORT}"
+    environment:
+      - TZ=Europe/Moscow
+    volumes:
+      - ../go/pkg:/go/pkg
+      - home_cli_data:/home/cli
+      - .:/app
+    profiles:
+      - donotstart
+
+volumes:
+    home_cli_data:
+
+networks:
+  dev:
+    name: dev
+    external: true
