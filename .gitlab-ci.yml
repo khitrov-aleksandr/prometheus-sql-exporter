@@ -1,0 +1,61 @@
+stages:
+  - build
+  - publish
+  - deploy
+
+variables:
+  TAG_LATEST: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:latest
+  TAG_COMMIT: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
+
+default:
+  image: docker:latest
+
+.build:
+  stage: build
+  script:
+    - docker build
+      -t $TAG_COMMIT -t $TAG_LATEST
+      --build-arg APP_USER_ID=$APP_USER_ID
+      -f ./docker/Dockerfile .
+
+.publish:
+  stage: publish
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker push $TAG_COMMIT
+    - docker push $TAG_LATEST
+
+.deploy:
+  stage: deploy
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker pull $TAG_COMMIT
+    - docker rm -f sql-exporter || true
+    - docker run -d
+      -v /home/services/sql-exporter/.env:/app/.env
+      --network $NETWORK
+      --restart unless-stopped
+      -p $EXT_PORT:$EXT_PORT
+      --name sql-exporter $TAG_COMMIT
+
+.prod-env:
+  environment: production
+  only:
+    - main
+  tags:
+    - prod
+
+build:
+  extends:
+    - .build
+    - .prod-env
+
+publish:
+  extends:
+    - .publish
+    - .prod-env
+
+deploy:
+  extends:
+    - .deploy
+    - .prod-env
