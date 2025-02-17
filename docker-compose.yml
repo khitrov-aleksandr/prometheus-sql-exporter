@@ -13,11 +13,11 @@ services:
     networks:
       - dev
     ports:
-      - "${EXT_PORT}:${EXT_PORT}"
+      - "${APP_PORT}:${APP_PORT}"
     environment:
       - TZ=Europe/Moscow
     volumes:
-      - ../go/pkg:/go/pkg
+      - ../../go:/go
       - home_cli_data:/home/cli
       - .:/app
     profiles:
