@@ -35,7 +35,7 @@ default:
       -v /home/services/sql-exporter/.env:/app/.env
       --network $NETWORK
       --restart unless-stopped
-      -p $EXT_PORT:$EXT_PORT
+      -p $APP_PORT:$APP_PORT
       --name sql-exporter $TAG_COMMIT
 
 .prod-env:
